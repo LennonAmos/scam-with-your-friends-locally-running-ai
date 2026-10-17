@@ -19,8 +19,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyFileVersion("1.0.1.0")]
+[assembly: AssemblyVersion("1.0.2.0")]
+[assembly: AssemblyFileVersion("1.0.2.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -28,7 +28,7 @@ namespace ScamOllama
     public sealed class Plugin
     {
         internal static readonly Plugin Instance = new Plugin();
-        internal const string ProviderLabel = "Ollama (Runs on your own pc)";
+        internal const string ProviderLabel = "Ollama (Local / Tailscale)";
         private ConfigEntry<string> endpoint, model, thinking, keepAlive;
         private ConfigEntry<int> context, output, topK, seed, timeout;
         private ConfigEntry<float> temperature, topP, repeatPenalty;
@@ -57,7 +57,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.1). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.2). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()
@@ -133,8 +133,8 @@ namespace ScamOllama
                 content.AddToClassList("openrouter-panel");
                 var original = root.Q("openrouter-panel");
                 original.parent.Insert(original.parent.IndexOf(original) + 1, content);
-                AddHelp("Ollama runs AI on the host's PC. No API key is needed. Install a text/chat model in Ollama first.");
-                Text("Ollama address", plugin.endpoint, "Local address, normally http://127.0.0.1:11434. No /api suffix.");
+                AddHelp("Use Ollama on this PC or a trusted PC over Tailscale. Models and GPU processing belong to the selected server.");
+                Text("Ollama address", plugin.endpoint, "Enter localhost or the other PC's Tailscale IP/MagicDNS URL and port. /api and /v1 suffixes are accepted. Edits save immediately.");
                 models = new DropdownField { name = "ollama-model", choices = new List<string> { string.IsNullOrEmpty(plugin.model.Value) ? "Refresh to find installed models" : plugin.model.Value } };
                 models.SetValueWithoutNotify(models.choices[0]);
                 models.AddToClassList("setting-dropdown");
@@ -180,13 +180,17 @@ namespace ScamOllama
             }
             private void Text(string label, ConfigEntry<string> entry, string help)
             {
-                var field = new TextField { value = entry.Value, isDelayed = true }; field.AddToClassList("byok-field"); Row(label, help).Add(field);
+                var field = new TextField { value = entry.Value, isDelayed = false }; field.AddToClassList("byok-field"); Row(label, help).Add(field);
                 field.RegisterValueChangedCallback(evt =>
                 {
                     if (!HostAiSettings.CanEdit) return;
-                    try { new GenerationSettings { Endpoint = evt.newValue }.ValidatedEndpoint(); entry.Value = evt.newValue.Trim().TrimEnd('/'); attempted = false; statusText = "Address saved. Refresh models to connect."; }
-                    catch (Exception e) { statusText = e.Message; field.SetValueWithoutNotify(entry.Value); }
-                    Refresh();
+                    // Persist the user's edit before validation. An unfinished
+                    // or rejected URL must never silently select another server.
+                    entry.Value = (evt.newValue ?? "").Trim();
+                    attempted = true;
+                    try { new GenerationSettings { Endpoint = entry.Value }.ValidatedEndpoint(); statusText = "Address saved. Click Refresh models to connect."; }
+                    catch (Exception e) { statusText = e.Message; }
+                    if (status != null) status.text = statusText;
                 });
             }
             private void Choice(string label, List<string> choices, string value, Action<string> save, string help)
@@ -228,13 +232,14 @@ namespace ScamOllama
             private async void Reload()
             {
                 if (busy || disposed) return;
-                attempted = true; busy = true; statusText = "Connecting to local Ollama..."; Refresh();
+                string configuredAddress = plugin.endpoint.Value;
+                attempted = true; busy = true; statusText = "Connecting to Ollama..."; Refresh();
                 try
                 {
                     string address = plugin.Snapshot().ValidatedEndpoint();
                     var tags = await Http(address + "/api/tags", null, 10, lifetime.Token);
                     var names = OllamaProtocol.LocalModels(tags);
-                    if (disposed) return;
+                    if (disposed || plugin.endpoint.Value != configuredAddress) return;
                     if (names.Length == 0)
                     {
                         models.choices = new List<string> { "No local models installed" };
@@ -250,7 +255,7 @@ namespace ScamOllama
                     }
                 }
                 catch (OperationCanceledException) { }
-                catch (Exception e) { statusText = e.Message; Error(e); }
+                catch (Exception e) { if (plugin.endpoint.Value == configuredAddress) { statusText = e.Message; Error(e); } }
                 finally { busy = false; if (!disposed) Refresh(); }
             }
 

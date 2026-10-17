@@ -15,15 +15,15 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Scam With Your Friends - Ollama Mod Setup")]
 [assembly: AssemblyDescription("Console installer, rollback and local Ollama setup instructions")]
 [assembly: AssemblyProduct("ScamOllama")]
-[assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyFileVersion("1.0.1.0")]
+[assembly: AssemblyVersion("1.0.2.0")]
+[assembly: AssemblyFileVersion("1.0.2.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
 internal static class Setup
 {
     const string GameExe = "Scam With Your Friends.exe";
     const string ManagedRelative = "Scam With Your Friends_Data\\Managed";
-    const string PluginHash = "B49AA0C2B13AA9D23174B3058B2B0CB57A11F5536AFE23DB8E63B98D6A3EE913";
+    const string PluginHash = "AC81B9288D4D09626D3A7C840FBCC44E095C0F376937B73737D5F939F39B56D3";
     static readonly Dictionary<string, string> Originals = new Dictionary<string, string> {
         { "Assembly-CSharp.dll", "53BD673F796EA21F8B1512C3F113E6BB1997CE62665AB3EF2C1A72B4BED490EC" },
         { "ScriptsAssDef.dll", "B73088146D09E75D00B074AC05CE822F9911D181EB0D184F7DBAA5FC8406C2F9" }
@@ -138,9 +138,9 @@ internal static class Setup
     static void Banner()
     {
         Write("============================================================", ConsoleColor.Cyan);
-        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.1", ConsoleColor.Cyan);
+        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.2", ConsoleColor.Cyan);
         Write("============================================================", ConsoleColor.Cyan);
-        Write("Adds local AI to Settings > Host > AI Backend.");
+        Write("Adds Ollama AI (local or Tailscale) to Settings > Host > AI Backend.");
         Write("Supports game build 0.1.71-swyf (Windows x64 Mono).");
         Write("Original game files are backed up for removal later.");
         Write("");
@@ -420,7 +420,7 @@ internal static class Setup
             ReplaceFile(plugin, Path.Combine(managed, "ScamOllama.dll"));
             foreach (string name in Originals.Keys) { ReplaceFile(Path.Combine(stage, name), Path.Combine(managed, name)); Write("       Installed: " + name); }
             var hashes = Originals.Keys.ToDictionary(n => n, n => Hash(Path.Combine(managed, n)));
-            var installation = new Dictionary<string, object> { { "version", "1.0.1" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
+            var installation = new Dictionary<string, object> { { "version", "1.0.2" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
             File.WriteAllText(Path.Combine(root, "install.json"), Json.Serialize(installation), Encoding.UTF8);
         }
         catch
@@ -506,8 +506,8 @@ internal static class Setup
 USE THE MOD IN THE GAME
 1. Start the game and host a lobby.
 2. Open Settings > Host > AI Backend.
-3. Select Ollama (Runs on your own pc).
-4. Leave the address at http://127.0.0.1:11434 unless you changed its port.
+3. Select Ollama (Local / Tailscale).
+4. Use http://127.0.0.1:11434 for this PC, or the GPU server's Tailscale URL.
 5. Click Refresh models, select your model, then Test local AI.
 6. Start with context 16384 and maximum output 2048 tokens.
    Scroll down for sampling controls, thinking, timeout and other options.
@@ -515,7 +515,14 @@ USE THE MOD IN THE GAME
 
 The 256K setting requires a model and hardware that support that context.
 Only local chat/text models are suitable. Cloud models are excluded.
-The host runs local inference. Full gameplay/multiplayer remain unverified.
+The selected Ollama server runs inference on its GPU. Live multiplayer remains unverified.
+
+TAILSCALE SERVER SETUP (OPTIONAL)
+Both PCs need Tailscale access to the GPU server.
+On that server, keep Ollama running and run:
+       tailscale serve --bg --tcp=11434 tcp://127.0.0.1:11434
+On the game host PC, enter http://<server-tailscale-ip>:11434 in Ollama address.
+Click Refresh models. The URL now saves immediately and stays as entered.
 
 REMOVE THE MOD
 Close the game, then run this same installer from a terminal with:

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -24,12 +25,34 @@ namespace ScamOllama
         public string ValidatedEndpoint()
         {
             Uri uri;
-            if (!Uri.TryCreate(Endpoint.Trim().TrimEnd('/'), UriKind.Absolute, out uri) ||
-                (uri.Scheme != "http" && uri.Scheme != "https") || !uri.IsLoopback ||
-                uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0 ||
-                uri.AbsolutePath != "/")
-                throw new ArgumentException("Use a local Ollama address, for example http://127.0.0.1:11434 (no /api suffix).");
+            if (string.IsNullOrWhiteSpace(Endpoint) ||
+                !Uri.TryCreate(Endpoint.Trim(), UriKind.Absolute, out uri) ||
+                (uri.Scheme != "http" && uri.Scheme != "https") ||
+                uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0)
+                throw new ArgumentException("Enter an HTTP or HTTPS Ollama address without a password, query or fragment.");
+            if (!AllowedHost(uri))
+                throw new ArgumentException("Use localhost, a Tailscale IP, or the server's MagicDNS name. Public internet servers are not supported.");
+            string path = uri.AbsolutePath.TrimEnd('/');
+            if (path != "" && path != "/api" && path != "/api/chat" && path != "/api/tags" && path != "/v1" && path != "/v1/chat/completions")
+                throw new ArgumentException("Use the Ollama server address, optionally ending in /api or /v1.");
+            // Canonicalize for requests only. Keep the entered URL in settings.
             return uri.GetLeftPart(UriPartial.Authority);
+        }
+
+        private static bool AllowedHost(Uri uri)
+        {
+            if (uri.IsLoopback) return true;
+            IPAddress address;
+            if (IPAddress.TryParse(uri.DnsSafeHost, out address))
+            {
+                byte[] bytes = address.GetAddressBytes();
+                if (bytes.Length == 4) return bytes[0] == 100 && bytes[1] >= 64 && bytes[1] <= 127;
+                return bytes.Length == 16 && bytes[0] == 0xfd && bytes[1] == 0x7a &&
+                    bytes[2] == 0x11 && bytes[3] == 0x5c && bytes[4] == 0xa1 && bytes[5] == 0xe0;
+            }
+            string host = uri.DnsSafeHost.TrimEnd('.');
+            return uri.HostNameType == UriHostNameType.Dns &&
+                (host.EndsWith(".ts.net", StringComparison.OrdinalIgnoreCase) || host.IndexOf('.') < 0);
         }
 
         public void Validate()

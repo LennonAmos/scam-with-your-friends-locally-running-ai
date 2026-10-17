@@ -88,7 +88,7 @@ namespace ScamOllama
         private static void Fail()
         {
             int code = Marshal.GetLastWin32Error();
-            throw new InvalidOperationException("Cannot communicate with local Ollama (Windows HTTP error " + code + "). Start Ollama and check its address; for a slow model, increase the request timeout.");
+            throw new InvalidOperationException("Cannot reach the Ollama server (Windows HTTP error " + code + "). Check its address and port. For Tailscale, both PCs must be connected and the server must allow access to Ollama.");
         }
 
         [DllImport("winhttp.dll", CharSet = CharSet.Unicode, SetLastError = true)] private static extern IntPtr WinHttpOpen(string agent, uint accessType, string proxy, string bypass, uint flags);
