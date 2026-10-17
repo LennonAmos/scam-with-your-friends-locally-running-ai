@@ -86,6 +86,26 @@ internal static class Patcher
             if (main.AssemblyReferences.Any(r => r.Name == "ScamOllama") || scripts.AssemblyReferences.Any(r => r.Name == "ScamOllama"))
                 throw new InvalidOperationException("Input assemblies are already patched. Use the preserved original backups.");
 
+            AppendReturn(scripts, "BackendAuthenticationStatusSource", "get_CanStartGame", "LocalGameEntry");
+            var primary = Prepare(scripts, "MainMenuToolkitController", "OnPrimaryAction");
+            Before(primary.Body.GetILProcessor(), primary.Body.Instructions[0],
+                Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Call, Hook(scripts, "LocalMenuPlay", "Prefix")),
+                Instruction.Create(OpCodes.Brtrue, primary.Body.Instructions[0]), Instruction.Create(OpCodes.Ret));
+            var menuRefresh = Prepare(scripts, "MainMenuToolkitController", "UpdateConnectionStatus");
+            var menuIl = menuRefresh.Body.GetILProcessor();
+            var menuRoot = scripts.GetType("MainMenuToolkitController").Fields.Single(f => f.Name == "root");
+            foreach (var ret in menuRefresh.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToArray())
+            {
+                ret.OpCode = OpCodes.Nop;
+                ret.Operand = null;
+                var load = Instruction.Create(OpCodes.Ldarg_0);
+                menuIl.InsertAfter(ret, load);
+                var field = Instruction.Create(OpCodes.Ldfld, menuRoot);
+                menuIl.InsertAfter(load, field);
+                var call = Instruction.Create(OpCodes.Call, Hook(scripts, "LocalMenuLayout", "Postfix"));
+                menuIl.InsertAfter(field, call);
+                menuIl.InsertAfter(call, Instruction.Create(OpCodes.Ret));
+            }
             PrefixOverride(scripts, "HostAiSettings", "TrySetBackend", "SetProvider", new[] { 0 }, false);
             AppendReturn(scripts, "HostAiSettings", "get_DirectSelected", "DirectSelected");
             AppendReturn(scripts, "HostAiSettings", "get_UseDirectOpenRouter", "DirectRoute");

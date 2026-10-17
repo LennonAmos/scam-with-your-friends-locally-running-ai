@@ -1,12 +1,12 @@
 # Scam With Your Friends — Local AI
 
-Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game version **0.1.71-swyf**.
+Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game version **0.1.74-swyf**.
 
 ## Setup
 
 1. Install [Ollama](https://ollama.com/download/windows), then download a model by running `ollama pull qwen2.5:7b` in a terminal.
 2. Close the game and run [setup.exe](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/latest).
-3. Start the game and host a lobby.
+3. Start the game, click **Play**, and host a lobby. If AI-service sign-in is unavailable, Play selects Ollama. The optional **Sign in with Steam** button is below Quit.
 4. Open **Settings → Host → AI Backend → Ollama (Local / Tailscale)**.
 5. Click **Refresh models**, choose your model, then **Test local AI**.
 

@@ -19,8 +19,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.2.0")]
-[assembly: AssemblyFileVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.3.0")]
+[assembly: AssemblyFileVersion("1.0.3.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -57,7 +57,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.2). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.3). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()
@@ -336,6 +336,117 @@ namespace ScamOllama
             if (!Plugin.Active || category != AiRequestCategory.Dialogue || __result != null) return;
             string path = Path.Combine(Application.streamingAssetsPath, "kolkata-json/core-prompts/official-system-prompt.schema.json");
             if (File.Exists(path)) __result = JObject.Parse(File.ReadAllText(path));
+        }
+    }
+
+    public static class LocalGameEntry
+    {
+        // This changes local game entry only. The cloud service's authentication
+        // status and Steam's networking/ownership checks remain authoritative.
+        public static void Postfix(ref bool result)
+        {
+            if (Plugin.Selected) result = true;
+        }
+    }
+
+    public static class LocalMenuPlay
+    {
+        private static readonly MethodInfo ShowScreen = typeof(MainMenuToolkitController).GetMethod("ShowScreen", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        public static bool Prefix(MainMenuToolkitController controller)
+        {
+            var service = BackendAuthenticationStatusSource.Current;
+            if (!Plugin.Selected && service != null && service.CanStartGame) return true;
+            // Host settings can only be edited after entering a lobby. Make the
+            // local route reachable when cloud sign-in is unavailable at startup.
+            PlayerPrefs.SetInt("HostAI.Backend", 2);
+            PlayerPrefs.Save();
+            Action play = () => ShowScreen.Invoke(controller, new object[] { "multiplayer-screen", "MULTIPLAYER" });
+            if (!MainMenuToolkitController.TryDeferForQwen(play)) play();
+            return false;
+        }
+    }
+
+    public static class LocalMenuLayout
+    {
+        private static readonly ConditionalWeakTable<VisualElement, Menu> Menus = new ConditionalWeakTable<VisualElement, Menu>();
+
+        public static void Postfix(VisualElement root)
+        {
+            if (root == null) return;
+            Menu menu;
+            if (!Menus.TryGetValue(root, out menu))
+            {
+                var play = root.Q<Button>("play-button");
+                var quit = root.Q<Button>("quit-button");
+                if (play == null || quit == null || quit.parent == null) return;
+                menu = new Menu(root, play, quit);
+                Menus.Add(root, menu);
+            }
+            menu.Refresh();
+        }
+
+        private sealed class Menu
+        {
+            private readonly VisualElement root, menuRoot;
+            private readonly Button play, signIn;
+
+            public Menu(VisualElement root, Button play, Button quit)
+            {
+                this.root = root;
+                this.play = play;
+                menuRoot = root.Q<VisualElement>("menu-root");
+                signIn = new Button(SignIn) { name = "ollama-service-sign-in" };
+                signIn.AddToClassList("menu-button");
+                quit.parent.Insert(quit.parent.IndexOf(quit) + 1, signIn);
+            }
+
+            private static void SignIn()
+            {
+                var service = BackendAuthenticationStatusSource.Current;
+                if (service == null) return;
+                if (service.BrowserSignInPending) service.CancelBrowserSignIn();
+                else if (service.BrowserSignInAvailable) service.BeginBrowserSignIn();
+                else service.RefreshAiCreditStatus(force: true);
+            }
+
+            public void Refresh()
+            {
+                var service = BackendAuthenticationStatusSource.Current;
+                bool signedIn = service != null && service.CanStartGame;
+                bool pending = service != null && service.BrowserSignInPending;
+                menuRoot?.EnableInClassList("menu-root--auth-recovery", false);
+                play.text = LanguageManager.GetMenuText("PLAY");
+                play.SetEnabled(true);
+                play.EnableInClassList("menu-button--primary", true);
+                play.tooltip = Plugin.Selected || !signedIn ? "Play with Ollama. Configure the server and model in Settings > Host after hosting." : string.Empty;
+                signIn.text = pending ? "CANCEL SIGN-IN" : "SIGN IN WITH STEAM";
+                signIn.SetEnabled(service != null && (!signedIn || pending));
+                signIn.tooltip = signedIn ? "Already signed in to the official AI service." : "Optional sign-in for the official AI service. Ollama does not need it.";
+                if (!Plugin.Selected) return;
+                var backend = root.Q<Label>("backend-auth-status");
+                if (backend != null)
+                {
+                    backend.text = "AI BACKEND: OLLAMA SELECTED";
+                    backend.EnableInClassList("connection-state--ready", false);
+                    backend.EnableInClassList("connection-state--failed", false);
+                }
+                // Keep Steam connectivity warnings visible for multiplayer.
+                var steam = root.Q<Label>("steam-connection-status");
+                if (steam != null && steam.ClassListContains("connection-state--failed")) return;
+                var title = root.Q<Label>("connection-warning-title");
+                var body = root.Q<Label>("connection-warning-body");
+                if (title != null) title.text = "LOCAL AI: OLLAMA";
+                if (body != null)
+                {
+                    body.text = "AI-service sign-in is optional. Configure and test Ollama in Settings > Host after hosting.";
+                    body.style.display = DisplayStyle.Flex;
+                }
+                var browser = root.Q<Label>("browser-sign-in-message");
+                var support = root.Q<Label>("sign-in-support-message");
+                if (!pending && browser != null) browser.style.display = DisplayStyle.None;
+                if (support != null) support.style.display = DisplayStyle.None;
+            }
         }
     }
 

@@ -15,18 +15,18 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Scam With Your Friends - Ollama Mod Setup")]
 [assembly: AssemblyDescription("Console installer, rollback and local Ollama setup instructions")]
 [assembly: AssemblyProduct("ScamOllama")]
-[assembly: AssemblyVersion("1.0.2.0")]
-[assembly: AssemblyFileVersion("1.0.2.0")]
+[assembly: AssemblyVersion("1.0.3.0")]
+[assembly: AssemblyFileVersion("1.0.3.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
 internal static class Setup
 {
     const string GameExe = "Scam With Your Friends.exe";
     const string ManagedRelative = "Scam With Your Friends_Data\\Managed";
-    const string PluginHash = "AC81B9288D4D09626D3A7C840FBCC44E095C0F376937B73737D5F939F39B56D3";
+    const string PluginHash = "E8907CCA3BDFF10A5BCEDD9843E8AE3D919A42F38C391673C1052879E03293C7";
     static readonly Dictionary<string, string> Originals = new Dictionary<string, string> {
-        { "Assembly-CSharp.dll", "53BD673F796EA21F8B1512C3F113E6BB1997CE62665AB3EF2C1A72B4BED490EC" },
-        { "ScriptsAssDef.dll", "B73088146D09E75D00B074AC05CE822F9911D181EB0D184F7DBAA5FC8406C2F9" }
+        { "Assembly-CSharp.dll", "99791CF93EC829D4784EE514AB78EBA19E5E4A7EA841B291D979432A5C911D8F" },
+        { "ScriptsAssDef.dll", "4CF9F54E3760C2392952EF17F981E01C06FB483C655F9953BA9F6386889F0B2E" }
     };
     static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
     static readonly object OutputLock = new object();
@@ -138,10 +138,10 @@ internal static class Setup
     static void Banner()
     {
         Write("============================================================", ConsoleColor.Cyan);
-        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.2", ConsoleColor.Cyan);
+        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.3", ConsoleColor.Cyan);
         Write("============================================================", ConsoleColor.Cyan);
         Write("Adds Ollama AI (local or Tailscale) to Settings > Host > AI Backend.");
-        Write("Supports game build 0.1.71-swyf (Windows x64 Mono).");
+        Write("Supports game build 0.1.74-swyf (Windows x64 Mono).");
         Write("Original game files are backed up for removal later.");
         Write("");
     }
@@ -420,7 +420,7 @@ internal static class Setup
             ReplaceFile(plugin, Path.Combine(managed, "ScamOllama.dll"));
             foreach (string name in Originals.Keys) { ReplaceFile(Path.Combine(stage, name), Path.Combine(managed, name)); Write("       Installed: " + name); }
             var hashes = Originals.Keys.ToDictionary(n => n, n => Hash(Path.Combine(managed, n)));
-            var installation = new Dictionary<string, object> { { "version", "1.0.2" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
+            var installation = new Dictionary<string, object> { { "version", "1.0.3" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
             File.WriteAllText(Path.Combine(root, "install.json"), Json.Serialize(installation), Encoding.UTF8);
         }
         catch
@@ -504,7 +504,9 @@ internal static class Setup
    If Ollama is not running, start its app, or run: ollama serve
 
 USE THE MOD IN THE GAME
-1. Start the game and host a lobby.
+1. Start the game, click Play and host a lobby.
+   Play selects Ollama if AI-service sign-in is unavailable.
+   Optional AI-service sign-in is below Quit; Steam multiplayer still needs Steam.
 2. Open Settings > Host > AI Backend.
 3. Select Ollama (Local / Tailscale).
 4. Use http://127.0.0.1:11434 for this PC, or the GPU server's Tailscale URL.
@@ -529,7 +531,7 @@ Close the game, then run this same installer from a terminal with:
        setup.exe --uninstall
 It checks and restores your original game DLL backups.
 Steam verification or a game update can remove the patch.
-Only game build 0.1.71-swyf is supported by this installer.
+Only game build 0.1.74-swyf is supported by this installer.
 
 HELP AND SOURCES
 https://docs.ollama.com/windows
