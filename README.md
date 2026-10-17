@@ -13,3 +13,5 @@ Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscal
 Ollama must be running while you play. Start with **16,384 context tokens** and **2,048 maximum output tokens**. After a game update, rerun the latest installer to restore the mod.
 
 For Tailscale, enter `http://<server-tailscale-ip>:11434` in **Ollama address**, then refresh models. Both PCs need Tailscale access to the server. On the GPU PC, Ollama can stay local while `tailscale serve --bg --tcp=11434 tcp://127.0.0.1:11434` shares it within the tailnet.
+
+With the [Famous Callers pack](https://github.com/LennonAmos/scam-with-your-friends-famous-callers), v1.0.4 also adds Rick's occasional burp playback effect.

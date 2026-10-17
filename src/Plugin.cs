@@ -19,8 +19,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.3.0")]
-[assembly: AssemblyFileVersion("1.0.3.0")]
+[assembly: AssemblyVersion("1.0.4.0")]
+[assembly: AssemblyFileVersion("1.0.4.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -57,7 +57,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.3). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.4). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()

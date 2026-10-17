@@ -8,13 +8,13 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot 'dist' }
-$version = '1.0.3'
+$version = '1.0.4'
 # Explicit files only: never recursively package a development directory.
 $sources = @(
     '.gitignore','AGENTS.md','README.md','LICENSE','Mono.Cecil-LICENSE.txt',
     'Build.ps1','Build-Release.ps1','Install.ps1','Uninstall.ps1',
     'src/Plugin.cs','src/LocalConfig.cs','src/OllamaProtocol.cs',
-    'src/OllamaHttp.cs','src/DialogueTokenRepair.cs','src/Patcher.cs',
+    'src/OllamaHttp.cs','src/DialogueTokenRepair.cs','src/Patcher.cs','src/RickBurps.cs',
     'installer/Setup.cs','installer/Build.ps1','installer/setup.manifest',
     'tools/Mono.Cecil.dll','tools/Mono.Cecil.Rocks.dll'
 )
