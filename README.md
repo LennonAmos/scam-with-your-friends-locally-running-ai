@@ -1,6 +1,6 @@
 # Scam With Your Friends — Local AI
 
-Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game version **0.1.74-swyf**.
+Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game **0.1.81-swyf**, Steam build **26020526**. Famous Callers is not required.
 
 ## Setup
 
@@ -14,4 +14,4 @@ Ollama must be running while you play. Start with **16,384 context tokens** and 
 
 For Tailscale, enter `http://<server-tailscale-ip>:11434` in **Ollama address**, then refresh models. Both PCs need Tailscale access to the server. On the GPU PC, Ollama can stay local while `tailscale serve --bg --tcp=11434 tcp://127.0.0.1:11434` shares it within the tailnet.
 
-With the [Famous Callers pack](https://github.com/LennonAmos/scam-with-your-friends-famous-callers), v1.0.4 also adds Rick's occasional burp playback effect.
+[Patch notes](CHANGELOG.md)

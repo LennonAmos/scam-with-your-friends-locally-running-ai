@@ -19,10 +19,10 @@ if (!$Compiler) { $Compiler = Join-Path (Get-Package 'microsoft.net.compilers.to
 if (!$FrameworkReferences) { $FrameworkReferences = Join-Path (Get-Package 'microsoft.netframework.referenceassemblies.net472' '1.0.3') 'build\.NETFramework\v4.7.2' }
 $managed = Join-Path $GamePath 'Scam With Your Friends_Data\Managed'
 $references = @('mscorlib.dll','System.dll','System.Core.dll') | ForEach-Object { '/reference:' + (Join-Path $FrameworkReferences $_) }
-$references += @('PocketTTS.dll','Kolkata.Speech.dll','Newtonsoft.Json.dll','Assembly-CSharp.dll','ScriptsAssDef.dll','Mirror.dll','UniTask.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.UIElementsModule.dll','UnityEngine.UnityWebRequestModule.dll','UnityEngine.InputLegacyModule.dll') | ForEach-Object { '/reference:' + (Join-Path $managed $_) }
+$references += @('Newtonsoft.Json.dll','Assembly-CSharp.dll','ScriptsAssDef.dll','Mirror.dll','UniTask.dll','UnityEngine.dll','UnityEngine.CoreModule.dll','UnityEngine.UIElementsModule.dll','UnityEngine.UnityWebRequestModule.dll','UnityEngine.InputLegacyModule.dll') | ForEach-Object { '/reference:' + (Join-Path $managed $_) }
 $outPath = Join-Path $PSScriptRoot 'payload\ScamOllama.dll'
 New-Item -ItemType Directory -Force -Path (Split-Path $outPath) | Out-Null
-& $Compiler /nologo /target:library /langversion:latest /optimize+ /nostdlib+ /debug- /deterministic+ "/pathmap:$PSScriptRoot=/_/ScamOllama" "/out:$outPath" @references (Join-Path $PSScriptRoot 'src\OllamaProtocol.cs') (Join-Path $PSScriptRoot 'src\OllamaHttp.cs') (Join-Path $PSScriptRoot 'src\Plugin.cs') (Join-Path $PSScriptRoot 'src\LocalConfig.cs') (Join-Path $PSScriptRoot 'src\DialogueTokenRepair.cs') (Join-Path $PSScriptRoot 'src\RickBurps.cs')
+& $Compiler /nologo /target:library /langversion:latest /optimize+ /nostdlib+ /debug- /deterministic+ "/pathmap:$PSScriptRoot=/_/ScamOllama" "/out:$outPath" @references (Join-Path $PSScriptRoot 'src\OllamaProtocol.cs') (Join-Path $PSScriptRoot 'src\OllamaHttp.cs') (Join-Path $PSScriptRoot 'src\Plugin.cs') (Join-Path $PSScriptRoot 'src\LocalConfig.cs') (Join-Path $PSScriptRoot 'src\DialogueTokenRepair.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed.' }
 Write-Output "Built $outPath"
 

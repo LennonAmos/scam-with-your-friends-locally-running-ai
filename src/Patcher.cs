@@ -106,21 +106,6 @@ internal static class Patcher
                 menuIl.InsertAfter(field, call);
                 menuIl.InsertAfter(call, Instruction.Create(OpCodes.Ret));
             }
-            var speech = Prepare(main, "PocketTtsSingleton", "EnqueueSpeak");
-            Before(speech.Body.GetILProcessor(), speech.Body.Instructions[0],
-                Instruction.Create(OpCodes.Ldarga, speech.Parameters[0]),
-                Instruction.Create(OpCodes.Ldarg, speech.Parameters[1]),
-                Instruction.Create(OpCodes.Ldarg, speech.Parameters[2]),
-                Instruction.Create(OpCodes.Ldarg, speech.Parameters[5]),
-                Instruction.Create(OpCodes.Call, Hook(main, "RickBurps", "Prepare")));
-            var frame = Prepare(main, "PocketTtsSingleton", "HandleFrameGenerated");
-            var voice = frame.Body.Variables.Single(v => v.VariableType.FullName == "System.String");
-            var voiceStore = frame.Body.Instructions.Single(i => i.OpCode == OpCodes.Stloc && i.Operand == voice);
-            var next = voiceStore.Next;
-            Before(frame.Body.GetILProcessor(), next,
-                Instruction.Create(OpCodes.Ldarg, frame.Parameters[0]), Instruction.Create(OpCodes.Ldloc, voice),
-                Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldfld, main.GetType("PocketTtsSingleton").Fields.Single(f => f.Name == "currentRequest")),
-                Instruction.Create(OpCodes.Call, Hook(main, "RickBurps", "Process")));
             PrefixOverride(scripts, "HostAiSettings", "TrySetBackend", "SetProvider", new[] { 0 }, false);
             AppendReturn(scripts, "HostAiSettings", "get_DirectSelected", "DirectSelected");
             AppendReturn(scripts, "HostAiSettings", "get_UseDirectOpenRouter", "DirectRoute");

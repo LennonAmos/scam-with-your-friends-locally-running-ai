@@ -19,8 +19,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.4.0")]
-[assembly: AssemblyFileVersion("1.0.4.0")]
+[assembly: AssemblyVersion("1.0.5.0")]
+[assembly: AssemblyFileVersion("1.0.5.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -57,7 +57,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.4). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.5). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()
@@ -213,7 +213,7 @@ namespace ScamOllama
             private void Number(string label, ConfigEntry<float> entry, float min, float max, string help)
             {
                 var field = new FloatField { value = entry.Value, isDelayed = true }; field.AddToClassList("byok-field"); Row(label, help).Add(field);
-                field.RegisterValueChangedCallback(evt => { if (HostAiSettings.CanEdit) { entry.Value = float.IsNaN(evt.newValue) ? entry.DefaultValue is float ? (float)entry.DefaultValue : min : Mathf.Clamp(evt.newValue, min, max); field.SetValueWithoutNotify(entry.Value); } });
+                field.RegisterValueChangedCallback(evt => { if (HostAiSettings.CanEdit) { entry.Value = float.IsNaN(evt.newValue) ? entry.DefaultValue : Mathf.Clamp(evt.newValue, min, max); field.SetValueWithoutNotify(entry.Value); } });
             }
 
             internal void Refresh()
@@ -345,7 +345,7 @@ namespace ScamOllama
         // status and Steam's networking/ownership checks remain authoritative.
         public static void Postfix(ref bool result)
         {
-            if (Plugin.Selected) result = true;
+            if (Plugin.Selected && !BackendAuthenticationStatusSource.PiracyWarningActive) result = true;
         }
     }
 
@@ -355,6 +355,7 @@ namespace ScamOllama
 
         public static bool Prefix(MainMenuToolkitController controller)
         {
+            if (BackendAuthenticationStatusSource.PiracyWarningActive) return true;
             var service = BackendAuthenticationStatusSource.Current;
             if (!Plugin.Selected && service != null && service.CanStartGame) return true;
             // Host settings can only be edited after entering a lobby. Make the
@@ -362,7 +363,7 @@ namespace ScamOllama
             PlayerPrefs.SetInt("HostAI.Backend", 2);
             PlayerPrefs.Save();
             Action play = () => ShowScreen.Invoke(controller, new object[] { "multiplayer-screen", "MULTIPLAYER" });
-            if (!MainMenuToolkitController.TryDeferForQwen(play)) play();
+            if (!MainMenuToolkitController.TryDeferForEntry(play)) play();
             return false;
         }
     }
@@ -373,7 +374,7 @@ namespace ScamOllama
 
         public static void Postfix(VisualElement root)
         {
-            if (root == null) return;
+            if (root == null || BackendAuthenticationStatusSource.PiracyWarningActive) return;
             Menu menu;
             if (!Menus.TryGetValue(root, out menu))
             {

@@ -2,6 +2,7 @@
 !/.gitignore
 !/AGENTS.md
 !/README.md
+!/CHANGELOG.md
 !/LICENSE
 !/Mono.Cecil-LICENSE.txt
 !/Build.ps1
@@ -15,7 +16,6 @@
 !/src/OllamaHttp.cs
 !/src/DialogueTokenRepair.cs
 !/src/Patcher.cs
-!/src/RickBurps.cs
 !/installer/
 !/installer/Setup.cs
 !/installer/Build.ps1
