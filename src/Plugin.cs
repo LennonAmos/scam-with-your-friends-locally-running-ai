@@ -19,8 +19,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.5.0")]
-[assembly: AssemblyFileVersion("1.0.5.0")]
+[assembly: AssemblyVersion("1.0.6.0")]
+[assembly: AssemblyFileVersion("1.0.6.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -57,7 +57,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.5). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.6). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()
@@ -339,13 +339,24 @@ namespace ScamOllama
         }
     }
 
+    public static class LocalPiracyPresentation
+    {
+        // The game's alarm, overlay and hidden-menu behavior share this flag.
+        // Presentation only: do not change authentication or contact Steam.
+        public static bool Prefix(ref bool result)
+        {
+            result = false;
+            return false;
+        }
+    }
+
     public static class LocalGameEntry
     {
         // This changes local game entry only. The cloud service's authentication
         // status and Steam's networking/ownership checks remain authoritative.
         public static void Postfix(ref bool result)
         {
-            if (Plugin.Selected && !BackendAuthenticationStatusSource.PiracyWarningActive) result = true;
+            if (Plugin.Selected) result = true;
         }
     }
 
@@ -355,7 +366,6 @@ namespace ScamOllama
 
         public static bool Prefix(MainMenuToolkitController controller)
         {
-            if (BackendAuthenticationStatusSource.PiracyWarningActive) return true;
             var service = BackendAuthenticationStatusSource.Current;
             if (!Plugin.Selected && service != null && service.CanStartGame) return true;
             // Host settings can only be edited after entering a lobby. Make the
@@ -374,7 +384,7 @@ namespace ScamOllama
 
         public static void Postfix(VisualElement root)
         {
-            if (root == null || BackendAuthenticationStatusSource.PiracyWarningActive) return;
+            if (root == null) return;
             Menu menu;
             if (!Menus.TryGetValue(root, out menu))
             {

@@ -1,6 +1,8 @@
 # Scam With Your Friends — Local AI
 
-Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game **0.1.81-swyf**, Steam build **26020526**. Famous Callers is not required.
+Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game **0.1.83-swyf**, Steam build **26097532**. Famous Callers is not required.
+
+Disables the piracy-warning overlay, looping alarm and warning-related menu block. Adds no Steam ownership checks and leaves your firewall settings alone.
 
 ## Setup
 

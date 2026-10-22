@@ -86,6 +86,7 @@ internal static class Patcher
             if (main.AssemblyReferences.Any(r => r.Name == "ScamOllama") || scripts.AssemblyReferences.Any(r => r.Name == "ScamOllama"))
                 throw new InvalidOperationException("Input assemblies are already patched. Use the preserved original backups.");
 
+            PrefixOverride(main, "KolkataApi", "get_ShowPiracyMarkers", "LocalPiracyPresentation", new int[0], false);
             AppendReturn(scripts, "BackendAuthenticationStatusSource", "get_CanStartGame", "LocalGameEntry");
             var primary = Prepare(scripts, "MainMenuToolkitController", "OnPrimaryAction");
             Before(primary.Body.GetILProcessor(), primary.Body.Instructions[0],
