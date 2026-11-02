@@ -31,7 +31,7 @@ trap 'exit 143' TERM
 printf 'Downloading Local AI v%s installer...\n' "$release_version"
 download "$release_url/setup.exe" "$work/setup.exe"
 download "$release_url/SHA256SUMS.txt" "$work/SHA256SUMS.txt"
-expected=$(awk '$2 == "setup.exe" { print $1 }' "$work/SHA256SUMS.txt")
+expected=$(awk '{ sub(/\r$/, "", $2); if ($2 == "setup.exe") print $1 }' "$work/SHA256SUMS.txt")
 case "$expected" in
     ''|*[!a-fA-F0-9]*) printf '%s\n' 'The release checksum is missing or invalid. Setup was not run.' >&2; exit 1 ;;
 esac
