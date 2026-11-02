@@ -10,6 +10,7 @@
 !/Install.ps1
 !/Uninstall.ps1
 !/Install-linux.sh
+!/Install-linux-easy.sh
 !/.github/
 !/.github/workflows/
 !/.github/workflows/installer.yml

@@ -13,7 +13,7 @@ $version = '1.0.8'
 $sources = @(
     '.gitignore','AGENTS.md','README.md','CHANGELOG.md','LICENSE','Mono.Cecil-LICENSE.txt',
     '.github/workflows/installer.yml',
-    'Build.ps1','Build-Release.ps1','Install.ps1','Uninstall.ps1','Install-linux.sh',
+    'Build.ps1','Build-Release.ps1','Install.ps1','Uninstall.ps1','Install-linux.sh','Install-linux-easy.sh',
     'src/Plugin.cs','src/LocalConfig.cs','src/OllamaProtocol.cs',
     'src/OllamaHttp.cs','src/DialogueTokenRepair.cs','src/Patcher.cs',
     'installer/Setup.cs','installer/Build.ps1','installer/setup.manifest',
@@ -70,7 +70,10 @@ try {
         Copy-Item -LiteralPath $origin -Destination (Join-Path $linuxStage $relative)
     }
     Compress-Archive -Path (Join-Path $linuxStage '*') -DestinationPath (Join-Path $OutputDirectory "ScamOllama-v$version-linux-proton.zip") -Force
-    $lines = @('setup.exe',"ScamOllama-v$version-win-x64.zip", "ScamOllama-v$version-linux-proton.zip") | ForEach-Object {
+    $easySource = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Install-linux-easy.sh'))
+    $easySource = [regex]::Replace($easySource, '(?m)^release_version=[^\r\n]+', "release_version=$version")
+    [IO.File]::WriteAllText((Join-Path $OutputDirectory 'Install-linux-easy.sh'), $easySource, [Text.UTF8Encoding]::new($false))
+    $lines = @('setup.exe','Install-linux-easy.sh',"ScamOllama-v$version-win-x64.zip", "ScamOllama-v$version-linux-proton.zip") | ForEach-Object {
         (Get-FileHash -LiteralPath (Join-Path $OutputDirectory $_)).Hash.ToLowerInvariant() + '  ' + $_
     }
     [IO.File]::WriteAllLines((Join-Path $OutputDirectory 'SHA256SUMS.txt'), $lines)

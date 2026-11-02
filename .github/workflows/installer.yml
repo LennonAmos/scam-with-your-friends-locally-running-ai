@@ -30,5 +30,6 @@ jobs:
       - name: Check Linux entry points
         run: |
           sh -n Install-linux.sh
+          sh -n Install-linux-easy.sh
           mono "$RUNNER_TEMP/ScamOllamaSetup.exe" --help --no-pause
           mono "$RUNNER_TEMP/ScamOllamaSetup.exe" --instructions --no-pause

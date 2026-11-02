@@ -12,7 +12,15 @@ The Linux installer targets the **Windows Steam build under Proton**. Native Lin
 
 Install your distribution's full Mono runtime, including `System.Web.Extensions`, and install [Ollama for Linux](https://ollama.com/download/linux). Run `ollama pull qwen2.5:7b`.
 
-Download and extract [ScamOllama-v1.0.8-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.8), then run:
+**Easy install:** download [Install-linux-easy.sh](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v1.0.8/Install-linux-easy.sh), then run:
+
+```sh
+sh Install-linux-easy.sh
+```
+
+The script downloads only the compiled installer, checks its SHA-256 checksum, runs setup, and removes its temporary downloads. No source download or manual extraction is needed. It requires Mono and curl or wget. You can also pass `--check`, `--uninstall`, or `--game-path "/path/to/Scam With Your Friends"`.
+
+Alternatively, download and extract [ScamOllama-v1.0.8-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.8), then run:
 
 ```sh
 sh Install-linux.sh --check
