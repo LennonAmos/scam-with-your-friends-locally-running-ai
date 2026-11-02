@@ -1,5 +1,14 @@
 # Patch notes
 
+## v1.0.8 — 2 November 2026
+
+- Update the Local AI runtime for game 0.1.95-swyf, Steam build 26261495.
+- Store provider selection in the game's current local save store; preserve Ollama instead of letting the native provider getter reset it.
+- Map host-menu choices to the current Official Backend, Official Backend (DeepSeek), and Ollama provider IDs.
+- Rebuild the plugin and offline patcher against the current game assemblies.
+- Include Linux/Proton and Windows installers with verified original backups.
+- Verify Linux installation, repeat installation, old-backup upgrades, unsupported-build refusal and exact uninstall restoration using the current game assemblies. Live gameplay remains unverified.
+
 ## v1.0.7 — 2 November 2026 (Linux/Proton preview)
 
 - Add Linux/Proton setup through the shared Mono installer, with Steam and Flatpak library discovery, portable Managed paths, Linux process detection and a Linux release archive.

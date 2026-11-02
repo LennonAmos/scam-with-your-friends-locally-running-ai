@@ -8,7 +8,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot 'dist' }
-$version = '1.0.7'
+$version = '1.0.8'
 # Explicit files only: never recursively package a development directory.
 $sources = @(
     '.gitignore','AGENTS.md','README.md','CHANGELOG.md','LICENSE','Mono.Cecil-LICENSE.txt',

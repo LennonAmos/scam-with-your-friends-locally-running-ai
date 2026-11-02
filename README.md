@@ -1,18 +1,18 @@
 # Scam With Your Friends — Local AI
 
-Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game **0.1.83-swyf**, Steam build **26097532**. Famous Callers is not required.
+Runs the game's chat AI with **Ollama** on this PC or a trusted PC over Tailscale. Choose an installed model and adjust its settings in-game. Supports game **0.1.95-swyf**, Steam build **26261495**. Famous Callers is not required.
 
 Disables the piracy-warning overlay, looping alarm and warning-related menu block. Adds no Steam ownership checks and leaves your firewall settings alone.
 
 ## Setup
 
-### Linux / Proton (experimental)
+### Linux / Proton
 
 The Linux installer targets the **Windows Steam build under Proton**. Native Linux game binaries are not supported. The game version and DLL hash checks are the same as on Windows.
 
 Install your distribution's full Mono runtime, including `System.Web.Extensions`, and install [Ollama for Linux](https://ollama.com/download/linux). Run `ollama pull qwen2.5:7b`.
 
-Download and extract [ScamOllama-v1.0.7-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.7), then run:
+Download and extract [ScamOllama-v1.0.8-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.8), then run:
 
 ```sh
 sh Install-linux.sh --check
@@ -21,7 +21,7 @@ sh Install-linux.sh
 
 Setup searches standard Steam and Flatpak Steam libraries. For a custom library or multiple copies, specify `--game-path "/path/to/Scam With Your Friends"`. Close the game before installation, then launch it normally through Steam with Proton and follow steps 3–5 below. Ollama runs on the Linux host at `http://127.0.0.1:11434`; do not install it inside Proton. No Proton prefix or launch-option changes are needed by this installer.
 
-To remove the mod, close the game and run `sh Install-linux.sh --uninstall`. Original backups and settings are preserved. The installer compiles and its Linux entry points have been checked with Mono. Installation, rollback and gameplay with the actual game under Proton still need validation. The source checkout requires a release build to produce the embedded installer.
+To remove the mod, close the game and run `sh Install-linux.sh --uninstall`. Original backups and settings are preserved. The Linux installer has passed check, install, reinstall, upgrade and uninstall tests against copies of the current game assemblies, including exact restoration of the original DLL hashes. Live gameplay under Proton has not been verified. The source checkout requires a release build to produce the embedded installer.
 
 ### Windows
 

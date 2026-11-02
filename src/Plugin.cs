@@ -13,14 +13,15 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
 using Mirror;
+using Metater.Persistence;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.6.0")]
-[assembly: AssemblyFileVersion("1.0.6.0")]
+[assembly: AssemblyVersion("1.0.8.0")]
+[assembly: AssemblyFileVersion("1.0.8.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -36,7 +37,7 @@ namespace ScamOllama
         private readonly LocalConfig Config = new LocalConfig();
         internal readonly SemaphoreSlim RequestGate = new SemaphoreSlim(1, 1);
         internal CancellationTokenSource Lifetime = new CancellationTokenSource();
-        internal static bool Selected { get { return PlayerPrefs.GetInt("HostAI.Backend", 0) == 2; } }
+        internal static bool Selected { get { return MetaSave.Local.GetInt("HostAI.Backend", 0) == 2; } }
         internal static bool Active { get { return Selected && NetworkServer.active && NetworkServer.listen; } }
 
         private Plugin()
@@ -126,7 +127,7 @@ namespace ScamOllama
                 plugin = Instance;
                 backend = root.Q<DropdownField>("host-ai-backend");
                 hostScreen = root.Q("host-settings-screen");
-                backend.choices = new List<string> { "Official Backend", "OpenRouter (Bring Your Own Key)", ProviderLabel };
+                backend.choices = new List<string> { "Official Backend", "Official Backend (DeepSeek)", ProviderLabel };
                 content = new VisualElement { name = "ollama-panel" };
                 content.style.marginTop = 12;
                 content.style.marginBottom = 16;
@@ -219,8 +220,8 @@ namespace ScamOllama
             internal void Refresh()
             {
                 if (disposed) return;
-                int provider = PlayerPrefs.GetInt("HostAI.Backend", 0);
-                backend.SetValueWithoutNotify(provider == 2 ? ProviderLabel : provider == 1 ? "OpenRouter (Bring Your Own Key)" : "Official Backend");
+                int provider = MetaSave.Local.GetInt("HostAI.Backend", 0);
+                backend.SetValueWithoutNotify(provider == 2 ? ProviderLabel : provider == 3 ? "Official Backend (DeepSeek)" : "Official Backend");
                 content.style.display = Selected && HostAiSettings.CanEdit ? DisplayStyle.Flex : DisplayStyle.None;
                 content.SetEnabled(HostAiSettings.CanEdit);
                 if (status != null) status.text = statusText;
@@ -294,7 +295,27 @@ namespace ScamOllama
         {
             if (backend != 2) return true;
             __result = HostAiSettings.CanEdit;
-            if (__result) { PlayerPrefs.SetInt("HostAI.Backend", 2); PlayerPrefs.Save(); if (ScammerGameManager.Instance != null) ScammerGameManager.Instance.SetOfficialAiBackend(false); }
+            if (__result) { MetaSave.Local.SetInt("HostAI.Backend", 2); MetaSave.Local.Save(); if (ScammerGameManager.Instance != null) ScammerGameManager.Instance.SetOfficialAiBackend(false); }
+            return false;
+        }
+    }
+    public static class SavedProvider
+    {
+        public static bool Prefix(ref int result)
+        {
+            if (!Plugin.Selected) return true;
+            result = 2;
+            return false;
+        }
+    }
+    public static class BackendChoice
+    {
+        private static readonly MethodInfo Refresh = typeof(HostAiSettingsPanel).GetMethod("Refresh", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        public static bool Prefix(HostAiSettingsPanel panel, ChangeEvent<string> change)
+        {
+            int provider = change.newValue == Plugin.ProviderLabel ? 2 : change.newValue == "Official Backend (DeepSeek)" ? 3 : 0;
+            HostAiSettings.TrySetBackend(provider);
+            Refresh.Invoke(panel, null);
             return false;
         }
     }
@@ -370,8 +391,8 @@ namespace ScamOllama
             if (!Plugin.Selected && service != null && service.CanStartGame) return true;
             // Host settings can only be edited after entering a lobby. Make the
             // local route reachable when cloud sign-in is unavailable at startup.
-            PlayerPrefs.SetInt("HostAI.Backend", 2);
-            PlayerPrefs.Save();
+            MetaSave.Local.SetInt("HostAI.Backend", 2);
+            MetaSave.Local.Save();
             Action play = () => ShowScreen.Invoke(controller, new object[] { "multiplayer-screen", "MULTIPLAYER" });
             if (!MainMenuToolkitController.TryDeferForEntry(play)) play();
             return false;

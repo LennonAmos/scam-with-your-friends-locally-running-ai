@@ -15,8 +15,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Scam With Your Friends - Ollama Mod Setup")]
 [assembly: AssemblyDescription("Console installer, rollback and local Ollama setup instructions")]
 [assembly: AssemblyProduct("ScamOllama")]
-[assembly: AssemblyVersion("1.0.7.0")]
-[assembly: AssemblyFileVersion("1.0.7.0")]
+[assembly: AssemblyVersion("1.0.8.0")]
+[assembly: AssemblyFileVersion("1.0.8.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
 internal static class Setup
@@ -24,10 +24,10 @@ internal static class Setup
     const string GameExe = "Scam With Your Friends.exe";
     static readonly string ManagedRelative = Path.Combine("Scam With Your Friends_Data", "Managed");
     static readonly bool Linux = Environment.OSVersion.Platform == PlatformID.Unix;
-    const string PluginHash = "28B704CC294335E1FC541FD72DA89A34C3B1A6FFF97D9871E3C74D182DA9A87B";
+    const string PluginHash = "022D1479D6013221F7F444F240C6339805AF8B1A8580215E01E8B0D3CB1E9F37";
     static readonly Dictionary<string, string> Originals = new Dictionary<string, string> {
-        { "Assembly-CSharp.dll", "F94B92369D2AC0F7C1F10A30AE6A1C7FC4CEE99C538693C162B1A7FDC02A2BB2" },
-        { "ScriptsAssDef.dll", "5432D089E0E9C93B1A74ADDAF27EC240758FC2A183EC913CA41D9949C46E0A84" }
+        { "Assembly-CSharp.dll", "BC111BC14CD7552B0C8DE4D21A686728AAEAA23B3713DC1642BF36C0B5B03528" },
+        { "ScriptsAssDef.dll", "8C5A54AE78A65D9C9EE74C9752C699F7CDC72A0506AD826A708637B1B30C8D0C" }
     };
     static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
     static readonly object OutputLock = new object();
@@ -139,10 +139,10 @@ internal static class Setup
     static void Banner()
     {
         Write("============================================================", ConsoleColor.Cyan);
-        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.7", ConsoleColor.Cyan);
+        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.8", ConsoleColor.Cyan);
         Write("============================================================", ConsoleColor.Cyan);
         Write("Adds Ollama AI (local or Tailscale) to Settings > Host > AI Backend.");
-        Write("Supports game 0.1.83-swyf, Steam build 26097532 (Windows x64, including Proton).");
+        Write("Supports game 0.1.95-swyf, Steam build 26261495 (Windows x64, including Proton).");
         Write("Original game files are backed up for removal later.");
         Write("");
     }
@@ -318,7 +318,7 @@ internal static class Setup
             NestedHash(record, "originalHashes", p.Key) == p.Value &&
             Hash(Path.Combine(managed, p.Key)) == NestedHash(record, "patchedHashes", p.Key));
         if (uninstall ? !currentModInstalled : !originalsInstalled && !currentModInstalled)
-            throw new InvalidOperationException("Game files do not match supported build 0.1.83-swyf (Steam 26097532), or contain another modification. Verify the game files in Steam and use the installer for that build.");
+            throw new InvalidOperationException("Game files do not match supported build 0.1.95-swyf (Steam 26261495), or contain another modification. Verify the game files in Steam and use the installer for that build.");
         foreach (var original in Originals)
         {
             string actual = Hash(Path.Combine(managed, original.Key));
@@ -455,7 +455,7 @@ internal static class Setup
             ReplaceFile(plugin, Path.Combine(managed, "ScamOllama.dll"));
             foreach (string name in Originals.Keys) { ReplaceFile(Path.Combine(stage, name), Path.Combine(managed, name)); Write("       Installed: " + name); }
             var hashes = Originals.Keys.ToDictionary(n => n, n => Hash(Path.Combine(managed, n)));
-            var installation = new Dictionary<string, object> { { "version", "1.0.7" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
+            var installation = new Dictionary<string, object> { { "version", "1.0.8" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
             File.WriteAllText(Path.Combine(root, "install.json"), Json.Serialize(installation), Encoding.UTF8);
         }
         catch
@@ -566,7 +566,7 @@ Close the game, then run this same installer from a terminal with:
        setup.exe --uninstall
 It checks and restores your original game DLL backups.
 Steam verification or a game update can remove the patch.
-Only game build 0.1.83-swyf (Steam build 26097532) is supported by this installer.
+Only game build 0.1.95-swyf (Steam build 26261495) is supported by this installer.
 
 HELP AND SOURCES
 https://docs.ollama.com/windows

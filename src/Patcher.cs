@@ -108,6 +108,12 @@ internal static class Patcher
                 menuIl.InsertAfter(call, Instruction.Create(OpCodes.Ret));
             }
             PrefixOverride(scripts, "HostAiSettings", "TrySetBackend", "SetProvider", new[] { 0 }, false);
+            PrefixOverride(scripts, "HostAiSettings", "get_Backend", "SavedProvider", new int[0], false);
+            var backendChanged = Prepare(scripts, "HostAiSettingsPanel", "BackendChanged");
+            Before(backendChanged.Body.GetILProcessor(), backendChanged.Body.Instructions[0],
+                Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldarg, backendChanged.Parameters[0]),
+                Instruction.Create(OpCodes.Call, Hook(scripts, "BackendChoice", "Prefix")),
+                Instruction.Create(OpCodes.Brtrue, backendChanged.Body.Instructions[0]), Instruction.Create(OpCodes.Ret));
             AppendReturn(scripts, "HostAiSettings", "get_DirectSelected", "DirectSelected");
             AppendReturn(scripts, "HostAiSettings", "get_UseDirectOpenRouter", "DirectRoute");
             AppendReturn(scripts, "HostAiSettings", "ResolveModel", "ResolveModel");
