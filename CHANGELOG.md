@@ -1,5 +1,15 @@
 # Patch notes
 
+## v1.0.9 — 2 November 2026
+
+- Keep Ollama visible in the backend dropdown and its selected-value label instead of passing it through the game's official-only formatter.
+- Remove a stripped string-concatenation call that stopped the model-refresh async method before its error handler could run.
+- Preserve readable HTTP errors with the same Unity runtime compatibility fix.
+- Validate plugin method references against the supplied game runtime during builds.
+- Make the easy Linux script fetch the latest stable installer on each run.
+- Verify both Ollama dropdown labels, model-list population, and the Local AI test inside the game against a running qwen2.5:7b model.
+- Reject the old broken plugin in the runtime validator and pass the corrected plugin.
+
 ## v1.0.8 — 2 November 2026
 
 - Update the Local AI runtime for game 0.1.95-swyf, Steam build 26261495.

@@ -70,7 +70,7 @@ namespace ScamOllama
                         {
                             string detail = status >= 300 && status < 400 ? "Redirects are disabled for local inference." : "Check Ollama and the selected model.";
                             try { detail = (string)JObject.Parse(text)["error"] ?? detail; } catch (JsonException) { }
-                            throw new InvalidOperationException("Ollama HTTP " + status + ": " + detail);
+                            throw new InvalidOperationException("Ollama HTTP " + status.ToString() + ": " + detail);
                         }
                         return JObject.Parse(text);
                     }

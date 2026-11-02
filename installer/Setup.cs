@@ -15,8 +15,8 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Scam With Your Friends - Ollama Mod Setup")]
 [assembly: AssemblyDescription("Console installer, rollback and local Ollama setup instructions")]
 [assembly: AssemblyProduct("ScamOllama")]
-[assembly: AssemblyVersion("1.0.8.0")]
-[assembly: AssemblyFileVersion("1.0.8.0")]
+[assembly: AssemblyVersion("1.0.9.0")]
+[assembly: AssemblyFileVersion("1.0.9.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
 internal static class Setup
@@ -24,7 +24,7 @@ internal static class Setup
     const string GameExe = "Scam With Your Friends.exe";
     static readonly string ManagedRelative = Path.Combine("Scam With Your Friends_Data", "Managed");
     static readonly bool Linux = Environment.OSVersion.Platform == PlatformID.Unix;
-    const string PluginHash = "022D1479D6013221F7F444F240C6339805AF8B1A8580215E01E8B0D3CB1E9F37";
+    const string PluginHash = "5D0C9C2B8AE1528E93256C27EC46AD389DF26D021ACCB6AC03358BD1478E3B69";
     static readonly Dictionary<string, string> Originals = new Dictionary<string, string> {
         { "Assembly-CSharp.dll", "BC111BC14CD7552B0C8DE4D21A686728AAEAA23B3713DC1642BF36C0B5B03528" },
         { "ScriptsAssDef.dll", "8C5A54AE78A65D9C9EE74C9752C699F7CDC72A0506AD826A708637B1B30C8D0C" }
@@ -139,7 +139,7 @@ internal static class Setup
     static void Banner()
     {
         Write("============================================================", ConsoleColor.Cyan);
-        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.8", ConsoleColor.Cyan);
+        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.9", ConsoleColor.Cyan);
         Write("============================================================", ConsoleColor.Cyan);
         Write("Adds Ollama AI (local or Tailscale) to Settings > Host > AI Backend.");
         Write("Supports game 0.1.95-swyf, Steam build 26261495 (Windows x64, including Proton).");
@@ -455,7 +455,7 @@ internal static class Setup
             ReplaceFile(plugin, Path.Combine(managed, "ScamOllama.dll"));
             foreach (string name in Originals.Keys) { ReplaceFile(Path.Combine(stage, name), Path.Combine(managed, name)); Write("       Installed: " + name); }
             var hashes = Originals.Keys.ToDictionary(n => n, n => Hash(Path.Combine(managed, n)));
-            var installation = new Dictionary<string, object> { { "version", "1.0.8" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
+            var installation = new Dictionary<string, object> { { "version", "1.0.9" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
             File.WriteAllText(Path.Combine(root, "install.json"), Json.Serialize(installation), Encoding.UTF8);
         }
         catch

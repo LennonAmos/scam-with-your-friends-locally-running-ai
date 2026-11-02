@@ -20,8 +20,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Label = UnityEngine.UIElements.Label;
 
-[assembly: AssemblyVersion("1.0.8.0")]
-[assembly: AssemblyFileVersion("1.0.8.0")]
+[assembly: AssemblyVersion("1.0.9.0")]
+[assembly: AssemblyFileVersion("1.0.9.0")]
 [assembly: AssemblyProduct("ScamOllama")]
 
 namespace ScamOllama
@@ -58,7 +58,7 @@ namespace ScamOllama
             structured = Config.Bind("Generation", "StructuredOutput", true, "Use the game's JSON schema as Ollama's output grammar.");
 
 
-            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.6). Open Settings > Host > AI Backend.");
+            Debug.Log("[ScamOllama] Direct mod initialized (v1.0.9). Open Settings > Host > AI Backend.");
         }
 
         internal GenerationSettings Snapshot()
@@ -128,6 +128,10 @@ namespace ScamOllama
                 backend = root.Q<DropdownField>("host-ai-backend");
                 hostScreen = root.Q("host-settings-screen");
                 backend.choices = new List<string> { "Official Backend", "Official Backend (DeepSeek)", ProviderLabel };
+                // The game's formatter maps every unknown choice to Official
+                // Backend, even when its saved provider is actually Ollama.
+                backend.formatListItemCallback = FormatBackend;
+                backend.formatSelectedValueCallback = FormatBackend;
                 content = new VisualElement { name = "ollama-panel" };
                 content.style.marginTop = 12;
                 content.style.marginBottom = 16;
@@ -252,7 +256,7 @@ namespace ScamOllama
                         models.choices = names.ToList();
                         if (!names.Contains(plugin.model.Value)) plugin.model.Value = names[0];
                         models.SetValueWithoutNotify(plugin.model.Value);
-                        statusText = names.Length + " local models found. Selected " + plugin.model.Value + ".";
+                        statusText = names.Length.ToString() + " local models found. Selected " + plugin.model.Value + ".";
                     }
                 }
                 catch (OperationCanceledException) { }
@@ -285,6 +289,11 @@ namespace ScamOllama
             }
 
             public void Dispose() { if (!disposed) { disposed = true; lifetime.Cancel(); lifetime.Dispose(); content.RemoveFromHierarchy(); } }
+
+            private static string FormatBackend(string value)
+            {
+                return value == ProviderLabel ? ProviderLabel : LanguageManager.GetMenuText(value);
+            }
         }
 
         internal static readonly ConditionalWeakTable<HostAiSettingsPanel, LocalPanel> Panels = new ConditionalWeakTable<HostAiSettingsPanel, LocalPanel>();

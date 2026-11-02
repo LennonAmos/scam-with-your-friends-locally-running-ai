@@ -1,8 +1,7 @@
 #!/bin/sh
 # Standalone Linux installer: download only the compiled setup, verify, and run.
 set -eu
-release_version=1.0.8
-release_url="https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v$release_version"
+release_url="https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/latest/download"
 
 as_root() {
     if [ "$(id -u)" -eq 0 ]; then
@@ -72,7 +71,7 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-printf 'Downloading Local AI v%s installer...\n' "$release_version"
+printf '%s\n' 'Downloading the latest Local AI installer...'
 download "$release_url/setup.exe" "$work/setup.exe"
 download "$release_url/SHA256SUMS.txt" "$work/SHA256SUMS.txt"
 expected=$(awk '{ sub(/\r$/, "", $2); if ($2 == "setup.exe") print $1 }' "$work/SHA256SUMS.txt")

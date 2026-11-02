@@ -28,3 +28,5 @@ Write-Output "Built $outPath"
 
 & $Compiler /nologo /target:exe /debug- /deterministic+ "/pathmap:$PSScriptRoot=/_/ScamOllama" "/out:$(Join-Path $PSScriptRoot 'tools\Patcher.exe')" "/reference:$(Join-Path $PSScriptRoot 'tools\Mono.Cecil.dll')" "/reference:$(Join-Path $PSScriptRoot 'tools\Mono.Cecil.Rocks.dll')" (Join-Path $PSScriptRoot 'src\Patcher.cs')
 if ($LASTEXITCODE -ne 0) { throw 'Patcher compilation failed.' }
+& (Join-Path $PSScriptRoot 'tools\Patcher.exe') --validate-runtime $managed $outPath
+if ($LASTEXITCODE -ne 0) { throw 'Plugin uses methods unavailable in the supplied game runtime.' }

@@ -8,7 +8,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot 'dist' }
-$version = '1.0.8'
+$version = '1.0.9'
 # Explicit files only: never recursively package a development directory.
 $sources = @(
     '.gitignore','AGENTS.md','README.md','CHANGELOG.md','LICENSE','Mono.Cecil-LICENSE.txt',
@@ -71,7 +71,6 @@ try {
     }
     Compress-Archive -Path (Join-Path $linuxStage '*') -DestinationPath (Join-Path $OutputDirectory "ScamOllama-v$version-linux-proton.zip") -Force
     $easySource = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Install-linux-easy.sh'))
-    $easySource = [regex]::Replace($easySource, '(?m)^release_version=[^\r\n]+', "release_version=$version")
     $easySource = $easySource.Replace("`r`n", "`n")
     [IO.File]::WriteAllText((Join-Path $OutputDirectory 'Install-linux-easy.sh'), $easySource, [Text.UTF8Encoding]::new($false))
     $lines = @('setup.exe','Install-linux-easy.sh',"ScamOllama-v$version-win-x64.zip", "ScamOllama-v$version-linux-proton.zip") | ForEach-Object {

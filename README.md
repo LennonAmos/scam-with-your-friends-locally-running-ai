@@ -12,15 +12,15 @@ The Linux installer targets the **Windows Steam build under Proton**. Native Lin
 
 The easy installer prepares the required setup components automatically. For local AI generation, install [Ollama for Linux](https://ollama.com/download/linux) and download a model with `ollama pull qwen2.5:7b`, or use your existing trusted Ollama server.
 
-**Easy install:** download [Install-linux-easy.sh](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v1.0.8/Install-linux-easy.sh), then run:
+**Easy install:** download [Install-linux-easy.sh](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v1.0.9/Install-linux-easy.sh), then run:
 
 ```sh
 sh Install-linux-easy.sh
 ```
 
-The script installs any missing setup components automatically on Arch/CachyOS, Debian/Ubuntu and Fedora desktop systems; enter your login password if your computer asks. It downloads the compiled installer, checks its SHA-256 checksum, runs setup as your normal user, and removes temporary downloads. No source download or manual extraction is needed. You can also pass `--check`, `--uninstall`, or `--game-path "/path/to/Scam With Your Friends"`.
+The script installs any missing setup components automatically on Arch/CachyOS, Debian/Ubuntu and Fedora desktop systems; enter your login password if your computer asks. Each run downloads the latest stable compiled installer, checks its SHA-256 checksum, runs setup as your normal user, and removes temporary downloads. No source download or manual extraction is needed. You can also pass `--check`, `--uninstall`, or `--game-path "/path/to/Scam With Your Friends"`.
 
-Alternatively, download and extract [ScamOllama-v1.0.8-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.8), then run:
+Alternatively, download and extract [ScamOllama-v1.0.9-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.9), then run:
 
 ```sh
 sh Install-linux.sh --check
@@ -29,7 +29,7 @@ sh Install-linux.sh
 
 Setup searches standard Steam and Flatpak Steam libraries. For a custom library or multiple copies, specify `--game-path "/path/to/Scam With Your Friends"`. Close the game before installation, then launch it normally through Steam with Proton and follow steps 3–5 below. Ollama runs on the Linux host at `http://127.0.0.1:11434`; do not install it inside Proton. No Proton prefix or launch-option changes are needed by this installer.
 
-To remove the mod, close the game and run `sh Install-linux.sh --uninstall`. Original backups and settings are preserved. The Linux installer has passed check, install, reinstall, upgrade and uninstall tests against copies of the current game assemblies, including exact restoration of the original DLL hashes. Live gameplay under Proton has not been verified. The source checkout requires a release build to produce the embedded installer.
+To remove the mod, close the game and run `sh Install-linux.sh --uninstall`. Original backups and settings are preserved. The Linux installer has passed check, install, reinstall, upgrade and uninstall tests against copies of the current game assemblies, including exact restoration of the original DLL hashes. The backend dropdown labels, model refresh, and built-in Local AI test were verified inside the game against Ollama with `qwen2.5:7b`. Full caller conversations and multiplayer remain unverified. The source checkout requires a release build to produce the embedded installer.
 
 ### Windows
 

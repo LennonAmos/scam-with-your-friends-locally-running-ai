@@ -76,6 +76,22 @@ internal static class Patcher
     {
         try
         {
+            if (args.Length == 3 && args[0] == "--validate-runtime")
+            {
+                var runtimeResolver = new DefaultAssemblyResolver();
+                runtimeResolver.AddSearchDirectory(Path.GetFullPath(args[1]));
+                runtimeResolver.AddSearchDirectory(Path.GetDirectoryName(Path.GetFullPath(args[2])));
+                using (var module = ModuleDefinition.ReadModule(args[2], new ReaderParameters { AssemblyResolver = runtimeResolver }))
+                {
+                    foreach (var reference in module.GetMemberReferences().OfType<MethodReference>())
+                    {
+                        if (reference.Resolve() == null)
+                            throw new InvalidOperationException("The game runtime does not include a required method: " + reference.FullName);
+                    }
+                }
+                Console.WriteLine("Plugin method references match the supplied game runtime.");
+                return 0;
+            }
             if (args.Length != 3) throw new ArgumentException("Usage: Patcher.exe <game Managed folder> <ScamOllama.dll> <staging output folder>");
             string managed = Path.GetFullPath(args[0]);
             var resolver = new DefaultAssemblyResolver(); resolver.AddSearchDirectory(managed); resolver.AddSearchDirectory(Path.GetDirectoryName(Path.GetFullPath(args[1])));
