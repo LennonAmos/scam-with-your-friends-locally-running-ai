@@ -10,7 +10,7 @@ Disables the piracy-warning overlay, looping alarm and warning-related menu bloc
 
 The Linux installer targets the **Windows Steam build under Proton**. Native Linux game binaries are not supported. The game version and DLL hash checks are the same as on Windows.
 
-Install your distribution's full Mono runtime, including `System.Web.Extensions`, and install [Ollama for Linux](https://ollama.com/download/linux). Run `ollama pull qwen2.5:7b`.
+The easy installer prepares the required setup components automatically. For local AI generation, install [Ollama for Linux](https://ollama.com/download/linux) and download a model with `ollama pull qwen2.5:7b`, or use your existing trusted Ollama server.
 
 **Easy install:** download [Install-linux-easy.sh](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v1.0.8/Install-linux-easy.sh), then run:
 
@@ -18,7 +18,7 @@ Install your distribution's full Mono runtime, including `System.Web.Extensions`
 sh Install-linux-easy.sh
 ```
 
-The script downloads only the compiled installer, checks its SHA-256 checksum, runs setup, and removes its temporary downloads. No source download or manual extraction is needed. It requires Mono and curl or wget. You can also pass `--check`, `--uninstall`, or `--game-path "/path/to/Scam With Your Friends"`.
+The script installs any missing setup components automatically on Arch/CachyOS, Debian/Ubuntu and Fedora desktop systems; enter your login password if your computer asks. It downloads the compiled installer, checks its SHA-256 checksum, runs setup as your normal user, and removes temporary downloads. No source download or manual extraction is needed. You can also pass `--check`, `--uninstall`, or `--game-path "/path/to/Scam With Your Friends"`.
 
 Alternatively, download and extract [ScamOllama-v1.0.8-linux-proton.zip](https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/tag/v1.0.8), then run:
 

@@ -4,12 +4,56 @@ set -eu
 release_version=1.0.8
 release_url="https://github.com/LennonAmos/scam-with-your-friends-locally-running-ai/releases/download/v$release_version"
 
+as_root() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    elif command -v doas >/dev/null 2>&1; then
+        doas "$@"
+    else
+        printf '%s\n' 'Automatic setup needs administrator access, but this system has no supported password prompt.' >&2
+        return 1
+    fi
+}
+
+install_requirements() {
+    ID= ID_LIKE=
+    if [ -r /etc/os-release ]; then . /etc/os-release; fi
+    printf '%s\n' 'Preparing your computer for setup. It may ask for your login password.'
+    # Only the package manager runs as administrator; game setup stays as you.
+    case " $ID $ID_LIKE " in
+        *' arch '*|*' cachyos '*)
+            as_root pacman -S --needed --noconfirm mono curl ca-certificates coreutils gawk || return 1
+            ;;
+        *' debian '*|*' ubuntu '*)
+            as_root apt-get update || return 1
+            as_root apt-get install -y mono-runtime libmono-system-web-extensions4.0-cil libmono-system-io-compression4.0-cil libmono-system-io-compression-filesystem4.0-cil curl ca-certificates coreutils gawk || return 1
+            ;;
+        *' fedora '*)
+            as_root dnf install -y mono-core 'mono(System.Web.Extensions)' 'mono(System.IO.Compression.FileSystem)' curl ca-certificates coreutils gawk || return 1
+            ;;
+        *)
+            printf '%s\n' 'Automatic setup supports Arch/CachyOS, Debian/Ubuntu and Fedora desktop systems. This distribution is not supported yet.' >&2
+            return 1
+            ;;
+    esac
+}
+
+need_requirements=0
+for required in mono sha256sum awk mktemp; do
+    if ! command -v "$required" >/dev/null 2>&1; then need_requirements=1; fi
+done
+if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then need_requirements=1; fi
+if [ "$need_requirements" -eq 1 ]; then
+    if ! install_requirements; then
+        printf '%s\n' 'Automatic setup could not finish. Check the package-manager message above, then run this script again.' >&2
+        exit 1
+    fi
+fi
 for required in mono sha256sum awk mktemp; do
     if ! command -v "$required" >/dev/null 2>&1; then
-        printf 'Missing requirement: %s\n' "$required" >&2
-        if [ "$required" = mono ]; then
-            printf '%s\n' 'Install the full Mono runtime (including System.Web.Extensions), then run this script again.' >&2
-        fi
+        printf '%s\n' 'The required setup components could not be installed automatically.' >&2
         exit 1
     fi
 done
@@ -18,7 +62,7 @@ if command -v curl >/dev/null 2>&1; then
 elif command -v wget >/dev/null 2>&1; then
     download() { wget --https-only --quiet --timeout=20 --tries=3 --output-document="$2" "$1"; }
 else
-    printf '%s\n' 'Install curl or wget, then run this script again.' >&2
+    printf '%s\n' 'The download component could not be installed automatically.' >&2
     exit 1
 fi
 
@@ -42,6 +86,17 @@ fi
 if ! (cd "$work" && printf '%s  setup.exe\n' "$expected" | sha256sum --check --status -); then
     printf '%s\n' 'Installer verification failed. Setup was not run; please download it again.' >&2
     exit 1
+fi
+if ! mono "$work/setup.exe" --help --no-pause >"$work/runtime-check.log" 2>&1; then
+    # Repair an existing minimal runtime that lacks the setup libraries.
+    if ! install_requirements; then
+        printf '%s\n' 'Automatic setup could not install the remaining components.' >&2
+        exit 1
+    fi
+    if ! mono "$work/setup.exe" --help --no-pause >"$work/runtime-check.log" 2>&1; then
+        printf '%s\n' 'The downloaded installer could not start on this computer.' >&2
+        exit 1
+    fi
 fi
 printf '%s\n' 'Download verified. Starting setup...'
 mono "$work/setup.exe" --no-pause "$@"
