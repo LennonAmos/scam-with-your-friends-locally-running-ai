@@ -1,5 +1,11 @@
 # Patch notes
 
+## v1.0.7 — 2 November 2026 (Linux/Proton preview)
+
+- Add Linux/Proton setup through the shared Mono installer, with Steam and Flatpak library discovery, portable Managed paths, Linux process detection and a Linux release archive.
+- Add installer compilation and publication checks in GitHub Actions.
+- Installation, rollback and gameplay validation on Linux remain required before release.
+
 ## v1.0.6 — 22 October 2026
 
 - Supports game 0.1.83-swyf, Steam build 26097532.

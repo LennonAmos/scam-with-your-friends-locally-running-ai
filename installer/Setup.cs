@@ -15,14 +15,15 @@ using Microsoft.Win32;
 [assembly: AssemblyTitle("Scam With Your Friends - Ollama Mod Setup")]
 [assembly: AssemblyDescription("Console installer, rollback and local Ollama setup instructions")]
 [assembly: AssemblyProduct("ScamOllama")]
-[assembly: AssemblyVersion("1.0.6.0")]
-[assembly: AssemblyFileVersion("1.0.6.0")]
+[assembly: AssemblyVersion("1.0.7.0")]
+[assembly: AssemblyFileVersion("1.0.7.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
 internal static class Setup
 {
     const string GameExe = "Scam With Your Friends.exe";
-    const string ManagedRelative = "Scam With Your Friends_Data\\Managed";
+    static readonly string ManagedRelative = Path.Combine("Scam With Your Friends_Data", "Managed");
+    static readonly bool Linux = Environment.OSVersion.Platform == PlatformID.Unix;
     const string PluginHash = "28B704CC294335E1FC541FD72DA89A34C3B1A6FFF97D9871E3C74D182DA9A87B";
     static readonly Dictionary<string, string> Originals = new Dictionary<string, string> {
         { "Assembly-CSharp.dll", "F94B92369D2AC0F7C1F10A30AE6A1C7FC4CEE99C538693C162B1A7FDC02A2BB2" },
@@ -116,7 +117,7 @@ internal static class Setup
             result = 1;
             Write("");
             Write("SETUP STOPPED: " + e.Message, ConsoleColor.Red);
-            if (e is UnauthorizedAccessException) Write("Windows denied write access. Check the game folder's permissions; use Run as administrator if that Steam library requires it.");
+            if (e is UnauthorizedAccessException) Write("Write access was denied. Check the Steam library folder's permissions.");
             Write("No unsupported game build will be patched. Close the game before retrying.");
             if (logPath != null) Write("Diagnostic log: " + logPath);
         }
@@ -138,10 +139,10 @@ internal static class Setup
     static void Banner()
     {
         Write("============================================================", ConsoleColor.Cyan);
-        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.6", ConsoleColor.Cyan);
+        Write("  SCAM WITH YOUR FRIENDS - OLLAMA MOD SETUP 1.0.7", ConsoleColor.Cyan);
         Write("============================================================", ConsoleColor.Cyan);
         Write("Adds Ollama AI (local or Tailscale) to Settings > Host > AI Backend.");
-        Write("Supports game 0.1.83-swyf, Steam build 26097532 (Windows x64 Mono).");
+        Write("Supports game 0.1.83-swyf, Steam build 26097532 (Windows x64, including Proton).");
         Write("Original game files are backed up for removal later.");
         Write("");
     }
@@ -177,6 +178,19 @@ internal static class Setup
     static IEnumerable<string> DiscoverGames()
     {
         var steamRoots = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (Linux)
+        {
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string data = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+            string primary = !string.IsNullOrEmpty(data) && Path.IsPathRooted(data) ? Path.Combine(data, "Steam") : Path.Combine(home, ".local/share/Steam");
+            // These are normally symlinks to the same install. Use one root to
+            // avoid reporting the same game as several different copies.
+            string standard = new[] { primary, Path.Combine(home, ".steam/steam"), Path.Combine(home, ".steam/root") }.FirstOrDefault(Directory.Exists);
+            if (standard != null) steamRoots.Add(standard);
+            steamRoots.Add(Path.Combine(home, ".var/app/com.valvesoftware.Steam/.local/share/Steam"));
+        }
+        else
+        {
         foreach (var item in new[] {
             new[] { @"HKEY_CURRENT_USER\Software\Valve\Steam", "SteamPath" },
             new[] { @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath" },
@@ -187,13 +201,14 @@ internal static class Setup
             catch (System.Security.SecurityException) { }
         }
         steamRoots.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam"));
-        var libraries = new HashSet<string>(steamRoots, StringComparer.OrdinalIgnoreCase);
+        }
+        var libraries = new HashSet<string>(steamRoots, Linux ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
         foreach (string steam in steamRoots)
         {
             string vdf = Path.Combine(steam, "steamapps", "libraryfolders.vdf");
             if (File.Exists(vdf)) foreach (string path in LibraryPaths(File.ReadAllText(vdf))) libraries.Add(path);
         }
-        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var result = new HashSet<string>(Linux ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
         foreach (string library in libraries)
         {
             string folder = "Scam With Your Friends";
@@ -241,6 +256,24 @@ internal static class Setup
     }
     static bool GameRunning(string game)
     {
+        // Wine process names may be truncated and MainModule points at Wine,
+        // so inspect Linux command lines instead of relying on the EXE name.
+        if (Linux)
+        {
+            foreach (string process in Directory.EnumerateDirectories("/proc"))
+            {
+                int pid;
+                if (!int.TryParse(Path.GetFileName(process), out pid) || pid == Process.GetCurrentProcess().Id) continue;
+                try
+                {
+                    string command = File.ReadAllText(Path.Combine(process, "cmdline"));
+                    if (command.IndexOf(GameExe, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+            }
+            return false;
+        }
         string expected = Path.Combine(game, GameExe);
         foreach (Process process in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(GameExe)))
         using (process)
@@ -357,7 +390,9 @@ internal static class Setup
     }
     static void RunPatcher(string originals, string plugin, string stage)
     {
-        var info = new ProcessStartInfo(Path.Combine(temporaryDirectory, "tools", "Patcher.exe"), string.Join(" ", new[] { originals, plugin, stage }.Select(QuoteArgument)))
+        string patcher = Path.Combine(temporaryDirectory, "tools", "Patcher.exe");
+        string[] arguments = Linux ? new[] { patcher, originals, plugin, stage } : new[] { originals, plugin, stage };
+        var info = new ProcessStartInfo(Linux ? Process.GetCurrentProcess().MainModule.FileName : patcher, string.Join(" ", arguments.Select(QuoteArgument)))
         { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, WorkingDirectory = temporaryDirectory };
         using (var process = new Process { StartInfo = info })
         {
@@ -420,7 +455,7 @@ internal static class Setup
             ReplaceFile(plugin, Path.Combine(managed, "ScamOllama.dll"));
             foreach (string name in Originals.Keys) { ReplaceFile(Path.Combine(stage, name), Path.Combine(managed, name)); Write("       Installed: " + name); }
             var hashes = Originals.Keys.ToDictionary(n => n, n => Hash(Path.Combine(managed, n)));
-            var installation = new Dictionary<string, object> { { "version", "1.0.6" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
+            var installation = new Dictionary<string, object> { { "version", "1.0.7" }, { "originalHashes", Originals }, { "patchedHashes", hashes }, { "pluginHash", PluginHash }, { "installedAt", DateTime.UtcNow.ToString("o") } };
             File.WriteAllText(Path.Combine(root, "install.json"), Json.Serialize(installation), Encoding.UTF8);
         }
         catch
@@ -489,7 +524,7 @@ internal static class Setup
     }
     static string InstructionText()
     {
-        return @"INSTALL OLLAMA AND A MODEL
+        string instructions = @"INSTALL OLLAMA AND A MODEL
 1. Download Ollama for Windows: https://ollama.com/download/windows
 2. Run its installer and start Ollama. It normally runs in the background.
 3. Open a NEW Terminal or PowerShell window after installation.
@@ -538,14 +573,23 @@ https://docs.ollama.com/windows
 https://docs.ollama.com/cli
 https://ollama.com/library/qwen2.5:7b
 ";
+        if (Linux)
+        {
+            instructions = instructions.Replace("Download Ollama for Windows: https://ollama.com/download/windows", "Install Ollama for Linux: https://ollama.com/download/linux")
+                .Replace("Run its installer and start Ollama. It normally runs in the background.", "Start the Ollama service on the Linux host, outside Proton.")
+                .Replace("Open a NEW Terminal or PowerShell window after installation.", "Open a terminal after installation.")
+                .Replace("setup.exe --uninstall", "sh Install-linux.sh --uninstall")
+                .Replace("https://docs.ollama.com/windows", "https://docs.ollama.com/linux");
+        }
+        return instructions;
     }
     static void Instructions()
     { Write(""); Write("=================== NEXT STEPS ===================", ConsoleColor.Green); Write(InstructionText()); }
     static void Help()
     {
         Banner();
-        Write("Double-click this EXE to install the mod and see setup instructions.");
-        Write("No companion ZIP or PowerShell script is required.");
+        Write(Linux ? "Run sh Install-linux.sh to install; launch the game through Steam with Proton." : "Double-click this EXE to install the mod and see setup instructions.");
+        Write(Linux ? "Extract the complete Linux archive and install the full Mono runtime first." : "No companion ZIP or PowerShell script is required.");
         Write("--game-path <folder>  Choose a game folder manually.");
         Write("--check               Check detection/compatibility without installing.");
         Write("--instructions        Show Ollama, model and in-game instructions only.");

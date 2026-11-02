@@ -8,11 +8,12 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot 'dist' }
-$version = '1.0.6'
+$version = '1.0.7'
 # Explicit files only: never recursively package a development directory.
 $sources = @(
     '.gitignore','AGENTS.md','README.md','CHANGELOG.md','LICENSE','Mono.Cecil-LICENSE.txt',
-    'Build.ps1','Build-Release.ps1','Install.ps1','Uninstall.ps1',
+    '.github/workflows/installer.yml',
+    'Build.ps1','Build-Release.ps1','Install.ps1','Uninstall.ps1','Install-linux.sh',
     'src/Plugin.cs','src/LocalConfig.cs','src/OllamaProtocol.cs',
     'src/OllamaHttp.cs','src/DialogueTokenRepair.cs','src/Patcher.cs',
     'installer/Setup.cs','installer/Build.ps1','installer/setup.manifest',
@@ -22,7 +23,7 @@ function Check-PublishFiles {
     foreach ($relative in $sources) {
         $path = Join-Path $PSScriptRoot $relative
         if (!(Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing public file: $relative" }
-        if ([IO.Path]::GetExtension($path) -in @('.cs','.ps1','.md','.txt','.manifest')) {
+        if ([IO.Path]::GetExtension($path) -in @('.cs','.ps1','.sh','.md','.txt','.manifest','.yml')) {
             $text = [IO.File]::ReadAllText($path)
             if ($text -match '(?i)(?<![a-z0-9])[a-z]:[\\/]') { throw "Absolute local path in public source: $relative" }
             if ($text -match '(?i)(?:ghp_|gho_|github_pat_)[a-z0-9_]{20,}') { throw "Possible credential in public source: $relative" }
@@ -62,7 +63,14 @@ try {
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $package -Force
     Copy-Item -LiteralPath $package -Destination (Join-Path $PSScriptRoot 'installer/Payload.zip') -Force
     & (Join-Path $PSScriptRoot 'installer/Build.ps1') -Compiler $Compiler -OutputPath (Join-Path $OutputDirectory 'setup.exe')
-    $lines = @('setup.exe',"ScamOllama-v$version-win-x64.zip") | ForEach-Object {
+    $linuxStage = Join-Path $stage 'linux-release'
+    New-Item -ItemType Directory -Force -Path $linuxStage | Out-Null
+    foreach ($relative in @('setup.exe','Install-linux.sh','README.md','LICENSE','Mono.Cecil-LICENSE.txt')) {
+        $origin = if ($relative -eq 'setup.exe') { Join-Path $OutputDirectory $relative } else { Join-Path $PSScriptRoot $relative }
+        Copy-Item -LiteralPath $origin -Destination (Join-Path $linuxStage $relative)
+    }
+    Compress-Archive -Path (Join-Path $linuxStage '*') -DestinationPath (Join-Path $OutputDirectory "ScamOllama-v$version-linux-proton.zip") -Force
+    $lines = @('setup.exe',"ScamOllama-v$version-win-x64.zip", "ScamOllama-v$version-linux-proton.zip") | ForEach-Object {
         (Get-FileHash -LiteralPath (Join-Path $OutputDirectory $_)).Hash.ToLowerInvariant() + '  ' + $_
     }
     [IO.File]::WriteAllLines((Join-Path $OutputDirectory 'SHA256SUMS.txt'), $lines)

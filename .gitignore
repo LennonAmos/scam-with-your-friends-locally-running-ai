@@ -9,6 +9,10 @@
 !/Build-Release.ps1
 !/Install.ps1
 !/Uninstall.ps1
+!/Install-linux.sh
+!/.github/
+!/.github/workflows/
+!/.github/workflows/installer.yml
 !/src/
 !/src/Plugin.cs
 !/src/LocalConfig.cs
